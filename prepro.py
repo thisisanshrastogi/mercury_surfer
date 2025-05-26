@@ -5,9 +5,17 @@ import spacy
 from nltk.corpus import stopwords
 from tqdm import tqdm
 import nltk
+import os 
+import glob
 tqdm.pandas()
 
-df = pd.read_csv("./reviews/reviews_com.tdbank.csv")
+
+csv_files = glob.glob(os.path.join("./reviews", "*.csv"))
+
+df_list = [pd.read_csv(file) for file in csv_files]
+
+# df = pd.read_csv("./reviews/reviews_com.tdbank.csv")
+df = pd.concat(df_list, ignore_index=True)
 
 reviews = df['Review'].dropna().astype(str)
 
