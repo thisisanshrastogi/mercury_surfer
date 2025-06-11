@@ -3,6 +3,8 @@ from sklearn.cluster import KMeans
 
 import pandas as pd
 
+# this file is for testing
+
 df = pd.read_csv("./preprocessed.csv")
 
 
