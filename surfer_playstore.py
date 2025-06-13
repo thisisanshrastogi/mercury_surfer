@@ -16,7 +16,8 @@ driver = None
 
 app_ids = []
 
-with open("app_list.txt","r") as file:
+# u can change this app list
+with open("app_list_2.txt","r") as file:
     app_ids = [line.strip() for line in file if line.strip()]
 
 
@@ -26,7 +27,7 @@ try:
     for APP_ID in app_ids:
         print(f"-----------Fetching reviews for {APP_ID}-----------")
         driver = webdriver.Chrome(options=chrome_options)
-        PAGINATION = 20
+        PAGINATION = 25
         url = f"https://play.google.com/store/apps/details?id={APP_ID}&hl=en&gl=US"
         try:
             driver.get(url)
@@ -73,7 +74,8 @@ try:
                 print(f"Could not select star option {star_count}:", e)
 
         all_data = []
-        for star in range(1, 6):
+        # Fetching only 1-4 star reviews
+        for star in range(1, 5):
             print(f"Fetching {star} star reviews....")
             try:
                 time.sleep(1)

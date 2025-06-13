@@ -10,11 +10,14 @@ import glob
 tqdm.pandas()
 
 
-csv_files = glob.glob(os.path.join("./reviews", "*.csv"))
+csv_files = glob.glob(os.path.join("./", "*.csv"))
 
 df_list = [pd.read_csv(file) for file in csv_files]
 
+df_list = [df for file, df in zip(csv_files, df_list) if os.path.basename(file).startswith("reviews_com")]
+
 # df = pd.read_csv("./reviews/reviews_com.tdbank.csv")
+
 df = pd.concat(df_list, ignore_index=True)
 
 reviews = df['Review'].dropna().astype(str)
@@ -51,7 +54,7 @@ cleaned_reviews = reviews.progress_apply(tokeize_lemmatize)
 df['Cleaned Reviews'] = cleaned_reviews
 
 
-df.to_csv("preprocessed.csv",index=False)
+df.to_csv("preprocessed_2.csv",index=False)
 
 
 
