@@ -31,7 +31,7 @@ def get_vader_sentiment(text):
         label = 'negative'
     else:
         label = 'neutral'
-    return pd.Series([scores['neg'],scores['neu'],scores['pos'],compound,label])
+    return pd.Series([scores['neg'],scores['neu'],scores['pos'],compound,label])    
 
 df[['neg','neu','pos','compound','vader_label']] = df[REVIEW_COLUMN].progress_apply(get_vader_sentiment)
 
