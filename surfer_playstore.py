@@ -27,7 +27,7 @@ try:
     for APP_ID in app_ids:
         print(f"-----------Fetching reviews for {APP_ID}-----------")
         driver = webdriver.Chrome(options=chrome_options)
-        PAGINATION = 25
+        PAGINATION = 60
         url = f"https://play.google.com/store/apps/details?id={APP_ID}&hl=en&gl=US"
         try:
             driver.get(url)
