@@ -1,4 +1,1 @@
-com.snappays
-com.doxo.android
-com.monarchmoney.mobile
 com.meetcleo.cleo
