@@ -37,7 +37,7 @@ df[['neg','neu','pos','compound','vader_label']] = df[REVIEW_COLUMN].progress_ap
 
 df['star_sentiments'] = df['Stars'].progress_apply(map_stars_to_sentiment)
 
-df.to_csv('sentiment_classified_2.csv',index=False)
+df.to_csv('sentiment_classified.csv',index=False)
 
-print("Sentiment analysis completed and saved as sentiment_classified_2.csv")
+print("Sentiment analysis completed and saved as sentiment_classified.csv")
 

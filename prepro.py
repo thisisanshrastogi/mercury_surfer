@@ -14,7 +14,7 @@ csv_files = glob.glob(os.path.join("./", "*.csv"))
 
 df_list = [pd.read_csv(file) for file in csv_files]
 
-df_list = [df for file, df in zip(csv_files, df_list) if os.path.basename(file).startswith("reviews_com")]
+df_list = [df for file, df in zip(csv_files, df_list) if os.path.basename(file).startswith("reviews_")]
 
 # df = pd.read_csv("./reviews/reviews_com.tdbank.csv")
 

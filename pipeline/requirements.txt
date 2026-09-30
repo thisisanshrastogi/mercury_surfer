@@ -1,0 +1,7 @@
+google-genai
+typesafe-sdk
+umap-learn
+hdbscan
+pandas
+tqdm
+numpy

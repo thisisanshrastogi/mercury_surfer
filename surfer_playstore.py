@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import os
 import pandas as pd
 
 chrome_options = Options()
@@ -27,7 +28,8 @@ try:
     for APP_ID in app_ids:
         print(f"-----------Fetching reviews for {APP_ID}-----------")
         driver = webdriver.Chrome(options=chrome_options)
-        PAGINATION = 60
+        PAGINATION = 150
+        output_file = f'reviews_{APP_ID}.csv'
         url = f"https://play.google.com/store/apps/details?id={APP_ID}&hl=en&gl=US"
         try:
             driver.get(url)
@@ -73,9 +75,8 @@ try:
             except Exception as e:
                 print(f"Could not select star option {star_count}:", e)
 
-        all_data = []
         # Fetching only 1-4 star reviews
-        for star in range(1, 5):
+        for star in range(5, 6):
             print(f"Fetching {star} star reviews....")
             try:
                 time.sleep(1)
@@ -104,24 +105,68 @@ try:
                     print(f"Could not open/select star rating for {star}:", e)
                     continue
 
-                for _ in range(PAGINATION):
+                LIMIT_DATE = pd.to_datetime('2026-01-01')
+                for scroll_idx in range(PAGINATION):
                     try:
                         driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
                         time.sleep(0.5)
                     except Exception as e:
                         print("Error sending END key:", e)
+                        
+                    # Periodically check if we have reached reviews older than the limit date
+                    if scroll_idx % 3 == 0:
+                        try:
+                            review_blocks = driver.find_elements(By.XPATH, '//div[@class="RHo1pe"]')
+                            if review_blocks:
+                                last_block = review_blocks[-1]
+                                date_str = last_block.find_element(By.CLASS_NAME, "bp9Aid").text
+                                parsed_date = pd.to_datetime(date_str, errors='coerce')
+                                if pd.notnull(parsed_date) and parsed_date < LIMIT_DATE:
+                                    print(f"Reached review from {parsed_date.date()} (older than limit). Stopping scroll early at iteration {scroll_idx}.")
+                                    break
+                        except Exception as e:
+                            pass
 
+                star_data = []
                 try:
                     review_blocks = driver.find_elements(By.XPATH, '//div[@class="RHo1pe"]')
                     for block in review_blocks:
                         try:
                             review_text = block.find_element(By.CLASS_NAME, "h3YV2d").text
                             date_span = block.find_element(By.CLASS_NAME, "bp9Aid").text
-                            all_data.append({'Review': review_text, 'Date': date_span, 'Stars': star})
+                            star_data.append({'Review': review_text, 'Date': date_span, 'Stars': star})
                         except Exception as e:
                             print("Error parsing review:", e)
                 except Exception as e:
                     print("Error finding review blocks:", e)
+
+                if star_data:
+                    star_df = pd.DataFrame(star_data)
+                    try:
+                        star_df['Date'] = pd.to_datetime(star_df['Date'], errors='coerce')
+                        filtered_star_df = star_df[star_df['Date'] > '2026-01-01'].copy()
+                        filtered_star_df = filtered_star_df.drop_duplicates(subset=['Review'])
+
+                        file_exists = os.path.exists(output_file) and os.path.getsize(output_file) > 0
+                        if file_exists:
+                            try:
+                                existing_df = pd.read_csv(output_file)
+                                if 'Review' in existing_df.columns:
+                                    filtered_star_df = filtered_star_df[~filtered_star_df['Review'].isin(existing_df['Review'])]
+                            except Exception as read_err:
+                                print(f"Warning: could not read existing file for deduplication: {read_err}")
+
+                        if not filtered_star_df.empty:
+                            # Format date nicely to YYYY-MM-DD
+                            filtered_star_df['Date'] = filtered_star_df['Date'].dt.strftime('%Y-%m-%d')
+                            filtered_star_df.to_csv(output_file, mode='a', header=not file_exists, index=False)
+                            print(f"Successfully appended {len(filtered_star_df)} reviews for {star}-star to {output_file}")
+                        else:
+                            print(f"No new reviews to append for {star}-star (duplicates or before 2026-01-01).")
+                    except Exception as e:
+                        print(f"Error saving CSV for star {star}: {e}")
+                else:
+                    print(f"No reviews parsed for {star}-star.")
 
                 try:
                     driver.execute_script("arguments[0].click()", see_all)
@@ -132,18 +177,12 @@ try:
                 print(f"Error in star loop for star={star}: {e}")
                 continue
 
-        if all_data:
-            df = pd.DataFrame(all_data)
-
-            try:
-                df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-                filtered_df = df[df['Date'] > '2024-01-01']
-                filtered_df.to_csv(f'reviews_{APP_ID}.csv', index=False)
-                print('Dumping data to file')
-            except Exception as e:
-                print("Error saving CSV:", e)
+        if os.path.exists(output_file) and os.path.getsize(output_file) > 0:
+            print(f"Completed fetching reviews for {APP_ID}. Output saved in {output_file}")
         else:
-            print("No data collected.")
+            print(f"No data collected for {APP_ID}.")
+
+        driver.quit()
 
 except Exception as e:
     print("Fatal error:", e)
