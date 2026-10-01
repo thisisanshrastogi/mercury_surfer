@@ -4,3 +4,9 @@ pipeline_outputs*
 outputs*
 .env
 app_list_2.txt
+chromedriver_linux64/
+trc*.json
+sentiment_classified*.csv
+preprocessed*.csv
+*.npy
+*.png
